@@ -13,6 +13,18 @@ Security automation fails in two ways: too slow, or too trigger-happy. CaseOps i
 3. **Only the deterministic core writes the verdict** — the LLM assistant is read-only, enforced at three layers (prompt/tool restriction, BPMN variable binding, blind-grader re-audit).
 4. **One input schema** — all scenarios share the same alert contract.
 
+## Operating impact (illustrative model)
+
+*Illustrative model with stated assumptions — not measured production data.*
+
+For a mid-size SOC at ~1,000 alerts/week, with ~60% low-severity auto-closable noise and ~15 min of manual triage per alert:
+
+- **~150 analyst-hours/week** redirected from copy-paste triage to real investigation (~600 low-severity alerts/week handled deterministically).
+- **The expensive failure mode is engineered out, not policed:** a single flaky high-confidence signal cannot auto-isolate a production server — the corroboration cap (one signal ≤ 0.55) structurally cannot auto-escalate, and remediation is reachable *only* through the human approval gate.
+- **Escalations arrive decision-ready:** recommended actions *and* the explicit gaps are pre-rendered, so the analyst approves with full epistemic context instead of rebuilding it.
+
+The adoption thesis: a CISO can deploy this because the verdict is deterministic, re-auditable, and the LLM is provably locked out of the decision — the three things that normally block automation from touching incident response.
+
 ## Architecture
 
 ```
@@ -63,7 +75,7 @@ python -m venv .venv && .venv/Scripts/pip install uipath pytest
 # → "VERDICT TAMPERED (1 field(s))" (exit 1)
 ```
 
-The test suite pins the demo scenarios, all four invariants (with negative asserts), severity threshold boundaries (4/5, 8/9, 13/14 on synthetic cases), and tamper detection.
+A 38-case pytest suite pins the demo scenarios, all four invariants (with negative asserts), severity threshold boundaries (4/5, 8/9, 13/14 on synthetic cases), and tamper detection.
 
 ## Severity model (and why the thresholds aren't arbitrary)
 
