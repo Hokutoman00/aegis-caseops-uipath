@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aegis CaseOps — Deck</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f12;
+    --panel: #14171c;
+    --ink: #e8e6e1;
+    --mut: #9aa0a6;
+    --line: #2a2f37;
+    --accent: #d98a3d; /* single amber accent on monochrome base */
+    --mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+  html, body { background: #000; }
+  body { font-family: var(--mono); color: var(--ink); }
+  .slide {
+    width: 1280px; height: 720px; background: var(--bg);
+    padding: 64px 72px; page-break-after: always; position: relative;
+    display: flex; flex-direction: column;
+    border-top: 3px solid var(--accent);
+  }
+  .slide:last-child { page-break-after: auto; }
+  .kicker { color: var(--accent); font-size: 14px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  h1 { font-size: 56px; line-height: 1.05; font-weight: 700; letter-spacing: -1px; }
+  h1 .sub { display:block; font-size: 26px; font-weight: 400; color: var(--mut); margin-top: 16px; letter-spacing: 0; }
+  h2 { font-size: 34px; line-height: 1.15; font-weight: 700; margin-bottom: 22px; letter-spacing: -.5px; }
+  ul { list-style: none; }
+  li { font-size: 20px; line-height: 1.5; color: var(--ink); margin: 0 0 14px; padding-left: 22px; position: relative; }
+  li::before { content: '—'; color: var(--accent); position: absolute; left: 0; }
+  li b { color: #fff; }
+  li i { color: var(--accent); font-style: normal; }
+  .mut { color: var(--mut); }
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 30px; display: flex; justify-content: space-between;
+          font-size: 13px; color: var(--mut); border-top: 1px solid var(--line); padding-top: 12px; }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 22px 26px;
+        font-size: 17px; line-height: 1.5; color: var(--ink); white-space: pre; overflow: hidden; }
+  pre .a { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 40px; }
+  .num { display:flex; gap:18px; align-items:flex-start; margin-bottom:18px; }
+  .num .n { color: var(--accent); font-size: 30px; font-weight: 700; min-width: 36px; }
+  .num .t { font-size: 19px; line-height: 1.45; }
+  .num .t b { color:#fff; }
+  .title-meta { margin-top: auto; font-size: 18px; color: var(--mut); line-height: 1.9; }
+  .title-meta b { color: var(--ink); }
+  .big { font-size: 26px; line-height: 1.4; color:#fff; margin-bottom: 22px; }
+  .tag { display:inline-block; border:1px solid var(--accent); color: var(--accent); border-radius: 3px;
+         padding: 3px 10px; font-size: 13px; margin-right: 8px; }
+</style>
+</head>
+<body>
+
+<!-- 1 TITLE -->
+<section class="slide">
+  <div class="kicker">UiPath AgentHack 2026 · Maestro BPMN Track</div>
+  <h1>Aegis CaseOps<span class="sub">Governed Security Incident Remediation on UiPath Maestro</span></h1>
+  <div class="title-meta">
+    <div>"The LLM is the narrator, never the judge."</div>
+    <div>Solo: <b>Hokuto Torigoe</b> · Built end-to-end with a coding agent (Claude Code)</div>
+  </div>
+  <div class="foot"><span>Aegis CaseOps</span><span>01 / 12</span></div>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide">
+  <div class="kicker">The problem · Business impact</div>
+  <h2>Security automation fails in two ways: too slow, or too trigger-happy.</h2>
+  <ul>
+    <li>SOC teams drown in alerts. But the scary failure of automation isn't speed — it's <b>an AI isolating a production server on one flaky signal</b>.</li>
+    <li>The question we built around: <i>what would it take for a CISO to actually trust an automated incident pipeline?</i></li>
+    <li>Our answer: <b>(1)</b> make the verdict deterministic · <b>(2)</b> keep every evidence gap visible · <b>(3)</b> make it re-auditable by anyone with the raw alert.</li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>02 / 12</span></div>
+</section>
+
+<!-- 3 SOLUTION -->
+<section class="slide">
+  <div class="kicker">Solution overview · Technical execution</div>
+  <h2>Raw alert JSON → a governed incident case on Maestro (BPMN)</h2>
+  <pre>alert JSON → API workflow → <span class="a">Maestro BPMN</span>
+                              │
+                     [triage] deterministic core (no LLM)
+                              │  XOR gateway (4 branches)
+        low_risk_close / request_more_evidence /
+        confidence_gap_review / <span class="a">escalate_for_containment</span>
+                              │
+                     queue: caseops-approval  (evidence AND gaps)
+                              │  human approval
+                     remediation-stub → postmortem (gaps included)
+
+   side channel: Agent Builder + Context Grounding analyst assistant
+                 — explains with citations, <span class="a">cannot write the verdict</span></pre>
+  <div class="foot"><span>Guarded by 4 declared invariants</span><span>03 / 12</span></div>
+</section>
+
+<!-- 4 INVARIANTS -->
+<section class="slide">
+  <div class="kicker">Innovation · Completeness</div>
+  <h2>Four declared invariants — each with a negative test</h2>
+  <div class="num"><div class="n">1</div><div class="t"><b>No remediation without approval</b> — the approval-required edge is structurally the only path into remediation on the BPMN graph.</div></div>
+  <div class="num"><div class="n">2</div><div class="t"><b>Gaps propagate, never swallowed</b> — a failed enrichment tool appears as the same string at intake, approval, and postmortem.</div></div>
+  <div class="num"><div class="n">3</div><div class="t"><b>Only the deterministic core writes the verdict</b> — the LLM is read-only, enforced at three layers (prompt/tool, BPMN binding, blind grader).</div></div>
+  <div class="num"><div class="n">4</div><div class="t"><b>One input schema</b> — every scenario shares the same alert contract.</div></div>
+  <div class="foot"><span>e.g. the low case must NOT require approval — asserted</span><span>04 / 12</span></div>
+</section>
+
+<!-- 5 DEMO D1 -->
+<section class="slide">
+  <div class="kicker">Demo D1 · Speed · Business impact</div>
+  <h2>Routine alert → auto-close, zero human time</h2>
+  <ul>
+    <li>Two low-severity signals, enrichment all healthy. Risk 2 points, confidence <b>0.70</b>.</li>
+    <li>Corroboration cap: even a 0.9 signal tops out at 0.70 with two signals — <b>a single signal can never auto-escalate</b>.</li>
+    <li>Routes straight to <i>low_risk_close</i>; the postmortem is already written. "Gaps: none recorded" — the section exists even when empty, so nothing is hidden.</li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>05 / 12</span></div>
+</section>
+
+<!-- 6 DEMO D2 -->
+<section class="slide">
+  <div class="kicker">Demo D2 · Governance · The climax</div>
+  <h2>Critical escalation — but remediation stops at the human gate</h2>
+  <ul>
+    <li>New admin role + outbound transfer to an unknown ASN + critical asset. Risk <b>15 points</b>, 3 correlated signals, confidence <b>0.76</b>.</li>
+    <li>Recommends network isolation + privilege revocation. But invariant #1: <b>no remediation without approval</b>.</li>
+    <li>The approval payload carries <i>both evidence and gaps</i> — the asset-inventory API timeout is shown right where the approver decides.</li>
+    <li>The human approves knowing exactly <b>what the system does not know</b>.</li>
+  </ul>
+  <div class="foot"><span>queue payload — gaps field highlighted</span><span>06 / 12</span></div>
+</section>
+
+<!-- 7 DEMO D3 -->
+<section class="slide">
+  <div class="kicker">Demo D3 · Honesty · Technical execution</div>
+  <h2>When tools degrade, the machine gets more careful — not more confident</h2>
+  <ul>
+    <li>2 of 3 enrichment tools fail. Severity looks high, but confidence collapses to <b>0.57</b> and falls below threshold.</li>
+    <li>It refuses to auto-escalate and routes to analyst review, recording both tool failures as gaps.</li>
+    <li>Degraded input → a more cautious machine. <i>Partial response applied to the agent topology itself.</i></li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>07 / 12</span></div>
+</section>
+
+<!-- 8 RE-AUDIT -->
+<section class="slide">
+  <div class="kicker">Proof of trust · Re-auditability</div>
+  <h2>A 60-line blind grader recomputes the verdict from the raw alert</h2>
+  <ul>
+    <li><b>verify_verdict.py</b> takes the raw alert + triage output and diffs the 5 verdict fields.</li>
+    <li>Whatever changes a verdict — an LLM, a workflow edit, a hand patch — it <b>fails loudly with a non-zero exit</b>.</li>
+    <li>Demonstrated: intact → "verdict intact" exit 0 · tampered severity + approval bypass → "VERDICT TAMPERED (2 fields)" exit 1.</li>
+    <li><i>Judges can try it themselves</i> — tamper with any verdict field and watch it get caught.</li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>08 / 12</span></div>
+</section>
+
+<!-- 9 PLATFORM -->
+<section class="slide">
+  <div class="kicker">Platform usage</div>
+  <h2>The UiPath SDK as the verdict substrate — not demo decoration</h2>
+  <ul>
+    <li>Three coded agents (triage / remediation / postmortem) = plain <b>uipath</b> SDK, zero LLM in the decision path, dataclass-in/out.</li>
+    <li><b>uipath eval</b> made real: a custom evaluator + eval set reproduce the verdict contract — all 3 demo scenarios score <i>1.0</i>, a tampered expected-set drops one to 0.5.</li>
+    <li>Maestro BPMN (XOR gateway + 4 condition edges) · Orchestrator queue · Agent Builder + Context Grounding.</li>
+    <li>CLI: <i>uipath init → run → eval → register → (auth → deploy → invoke)</i>. Local eval holds even before cloud gates.</li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>09 / 12</span></div>
+</section>
+
+<!-- 10 CONFIDENCE -->
+<section class="slide">
+  <div class="kicker">Technical depth</div>
+  <h2>Averaging let one 0.9 signal look authoritative. We killed that.</h2>
+  <ul>
+    <li>Corroboration cap: <b>confidence = min(avg, 0.40 + 0.15 × signal_count)</b>.</li>
+    <li>More independent signals monotonically raise the ceiling. A single signal caps at <b>0.55</b> → cannot auto-escalate.</li>
+    <li>Severity thresholds 5/9/14 are justified by synthetic boundary tests (4/5, 8/9, 13/14) — not overfit to the demo fixtures.</li>
+    <li><b>38 pytest cases</b> pin the 3 demos + 4 invariants (with negative asserts) + threshold boundaries + tamper detection.</li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>10 / 12</span></div>
+</section>
+
+<!-- 11 CODING AGENT -->
+<section class="slide">
+  <div class="kicker">Built with a coding agent</div>
+  <h2>Design → adversarial review (blind grader) → TDD — end-to-end in Claude Code</h2>
+  <ul>
+    <li>The design doc was scored leaf-by-leaf by a blind grader → sent back → rewritten until it passed a Definition of Deep.</li>
+    <li>Two weaknesses (confidence model, LLM enforcement) were self-discovered and designed out before implementation.</li>
+    <li><b>The commit history is the coding-agent audit trail.</b></li>
+  </ul>
+  <div class="foot"><span>Aegis CaseOps</span><span>11 / 12</span></div>
+</section>
+
+<!-- 12 CLOSE -->
+<section class="slide">
+  <div class="kicker">Close</div>
+  <div class="big">Deterministic verdicts · Visible gaps · Human-gated remediation · Independent re-audit</div>
+  <h1 style="font-size:40px">Incident automation a CISO can sign off on.<span class="sub">Built end-to-end with a coding agent.</span></h1>
+  <div class="title-meta">
+    <div><b>Repo</b> github.com/Hokutoman00/aegis-caseops-uipath</div>
+    <div><b>Track</b> UiPath Maestro BPMN &nbsp;·&nbsp; <b>Demo video</b> youtu.be/2XQD_LLDE_o</div>
+  </div>
+  <div class="foot"><span>Aegis CaseOps</span><span>12 / 12</span></div>
+</section>
+
+</body>
+</html>
