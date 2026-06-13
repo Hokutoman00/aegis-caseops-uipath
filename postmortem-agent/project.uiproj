@@ -1,0 +1,6 @@
+{
+  "ProjectType": "Function",
+  "Name": "aegis-caseops-postmortem",
+  "Description": "Aegis CaseOps deterministic postmortem formatter (O4 baseline) for UiPath AgentHack 2026",
+  "MainFile": null
+}

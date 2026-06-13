@@ -1,0 +1,53 @@
+{
+    "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
+    "$id": "entry-points.json",
+    "entryPoints": [
+        {
+            "filePath": "main",
+            "uniqueId": "d8cd887e-dd22-461c-b48f-e32593920900",
+            "type": "function",
+            "input": {
+                "type": "object",
+                "properties": {
+                    "case_id": {
+                        "type": "string"
+                    },
+                    "approved_actions": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "case_id"
+                ]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "ticket_id": {
+                        "type": "string"
+                    },
+                    "remediation_log": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "ticket_id",
+                    "remediation_log"
+                ]
+            },
+            "graph": {
+                "nodes": [
+                    {
+                        "id": "main.py:34",
+                        "name": "main",
+                        "type": "function",
+                        "metadata": {
+                            "file": "main.py"
+                        }
+                    }
+                ],
+                "edges": []
+            }
+        }
+    ]
+}

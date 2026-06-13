@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Aegis CaseOps — Maestro BPMN mainline (design-fallback-bpmn.md O1'/O2', promoted 2026-06-12)
+
+  DRAFT authored locally; verify by import into Studio Web during SPIKE-S3.
+  - Condition expressions on gateway edges use `triage.maestro_branch == "..."` as
+    placeholders; the exact Maestro expression-editor syntax is an S3 confirmation item.
+  - 不変量1 (O2'読み替え): the ONLY path from flow_escalate to task_remediation goes
+    through task_enqueue -> task_wait_approval -> gw_approved[approved==true].
+    No other incoming edge to task_remediation may ever be added.
+  - 不変量2 (O5): the queue payload carries `gaps` verbatim; postmortem input includes it.
+-->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="aegis-caseops-definitions"
+                  targetNamespace="http://aegis.example/caseops">
+  <bpmn:process id="aegis-caseops-process" name="Aegis CaseOps" isExecutable="true">
+
+    <bpmn:startEvent id="start_intake" name="Case intake (payload_json)">
+      <bpmn:documentation>P2 案B: API workflow HTTP trigger が P1 alert JSON を受け、StartJobs の InputArguments.payload_json でこのプロセスを起動する。</bpmn:documentation>
+      <bpmn:outgoing>flow_start_triage</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="task_triage" name="Triage (coded agent: aegis-caseops-triage)">
+      <bpmn:documentation>M1/M3 決定論コア。出力 JSON を case 変数 `triage` に bind する。LLM 不関与（不変量3）。</bpmn:documentation>
+      <bpmn:incoming>flow_start_triage</bpmn:incoming>
+      <bpmn:incoming>flow_evidence_retriage</bpmn:incoming>
+      <bpmn:incoming>flow_review_retriage</bpmn:incoming>
+      <bpmn:outgoing>flow_triage_gw</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:exclusiveGateway id="gw_branch" name="maestro_branch?" default="flow_review">
+      <bpmn:documentation>O1' 遷移表。default エッジは confidence_gap_review 行き（取りこぼしを analyst レビューへ）。</bpmn:documentation>
+      <bpmn:incoming>flow_triage_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_close</bpmn:outgoing>
+      <bpmn:outgoing>flow_evidence</bpmn:outgoing>
+      <bpmn:outgoing>flow_review</bpmn:outgoing>
+      <bpmn:outgoing>flow_escalate</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- escalate_for_containment: O2' approval gate -->
+    <bpmn:serviceTask id="task_enqueue" name="Enqueue approval item (queue: caseops-approval)">
+      <bpmn:documentation>O2 payload をそのまま SpecificContent に積む: title / severity / recommended_action / evidence / gaps / sla_minutes。gaps を削らない（不変量2）。</bpmn:documentation>
+      <bpmn:incoming>flow_escalate</bpmn:incoming>
+      <bpmn:outgoing>flow_enqueue_wait</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:receiveTask id="task_wait_approval" name="Wait: human completes queue item (approved: true/false)">
+      <bpmn:documentation>人間が Orchestrator UI で item を開き Output に approved を書いて完了させる。完了 Output を case 変数 `approval` に bind。</bpmn:documentation>
+      <bpmn:incoming>flow_enqueue_wait</bpmn:incoming>
+      <bpmn:outgoing>flow_wait_gw</bpmn:outgoing>
+    </bpmn:receiveTask>
+
+    <bpmn:exclusiveGateway id="gw_approved" name="approved?" default="flow_rejected">
+      <bpmn:incoming>flow_wait_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_approved</bpmn:outgoing>
+      <bpmn:outgoing>flow_rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="task_remediation" name="Remediation stub (coded agent: aegis-caseops-remediation-stub)">
+      <bpmn:documentation>O3。入力 = {case_id, approved_actions}。出力 remediation_log を case 変数に bind して O4 へ渡す。mock のみ・実破壊なし。</bpmn:documentation>
+      <bpmn:incoming>flow_approved</bpmn:incoming>
+      <bpmn:outgoing>flow_remediation_post</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- request_more_evidence / confidence_gap_review: analyst loops -->
+    <bpmn:userTask id="task_evidence" name="Evidence collection (analyst)">
+      <bpmn:incoming>flow_evidence</bpmn:incoming>
+      <bpmn:outgoing>flow_evidence_retriage</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="task_review" name="Analyst review (confidence gap)">
+      <bpmn:incoming>flow_review</bpmn:incoming>
+      <bpmn:outgoing>flow_review_retriage</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="task_postmortem" name="Postmortem summary (markdown)">
+      <bpmn:documentation>O4。M2 出力 + 承認履歴（approval / remediation_log）+ gaps を 1 つの markdown に整形。全 branch の終端。</bpmn:documentation>
+      <bpmn:incoming>flow_close</bpmn:incoming>
+      <bpmn:incoming>flow_rejected</bpmn:incoming>
+      <bpmn:incoming>flow_remediation_post</bpmn:incoming>
+      <bpmn:outgoing>flow_post_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="end_case" name="Case closed">
+      <bpmn:incoming>flow_post_end</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="flow_start_triage" sourceRef="start_intake" targetRef="task_triage" />
+    <bpmn:sequenceFlow id="flow_triage_gw" sourceRef="task_triage" targetRef="gw_branch" />
+    <bpmn:sequenceFlow id="flow_close" name="low_risk_close" sourceRef="gw_branch" targetRef="task_postmortem">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">triage.maestro_branch == "low_risk_close"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_evidence" name="request_more_evidence" sourceRef="gw_branch" targetRef="task_evidence">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">triage.maestro_branch == "request_more_evidence"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_review" name="confidence_gap_review (default)" sourceRef="gw_branch" targetRef="task_review" />
+    <bpmn:sequenceFlow id="flow_escalate" name="escalate_for_containment" sourceRef="gw_branch" targetRef="task_enqueue">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">triage.maestro_branch == "escalate_for_containment"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_enqueue_wait" sourceRef="task_enqueue" targetRef="task_wait_approval" />
+    <bpmn:sequenceFlow id="flow_wait_gw" sourceRef="task_wait_approval" targetRef="gw_approved" />
+    <bpmn:sequenceFlow id="flow_approved" name="approved == true" sourceRef="gw_approved" targetRef="task_remediation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">approval.approved == true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_rejected" name="rejected (default)" sourceRef="gw_approved" targetRef="task_postmortem" />
+    <bpmn:sequenceFlow id="flow_remediation_post" sourceRef="task_remediation" targetRef="task_postmortem" />
+    <bpmn:sequenceFlow id="flow_evidence_retriage" name="re-triage" sourceRef="task_evidence" targetRef="task_triage" />
+    <bpmn:sequenceFlow id="flow_review_retriage" name="re-triage" sourceRef="task_review" targetRef="task_triage" />
+    <bpmn:sequenceFlow id="flow_post_end" sourceRef="task_postmortem" targetRef="end_case" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="diagram_caseops">
+    <bpmndi:BPMNPlane id="plane_caseops" bpmnElement="aegis-caseops-process">
+      <bpmndi:BPMNShape id="s_start" bpmnElement="start_intake"><dc:Bounds x="152" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_triage" bpmnElement="task_triage"><dc:Bounds x="240" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw" bpmnElement="gw_branch" isMarkerVisible="true"><dc:Bounds x="392" y="225" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_enqueue" bpmnElement="task_enqueue"><dc:Bounds x="500" y="40" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_wait" bpmnElement="task_wait_approval"><dc:Bounds x="660" y="40" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw2" bpmnElement="gw_approved" isMarkerVisible="true"><dc:Bounds x="820" y="55" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_remed" bpmnElement="task_remediation"><dc:Bounds x="920" y="40" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_evidence" bpmnElement="task_evidence"><dc:Bounds x="500" y="340" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_review" bpmnElement="task_review"><dc:Bounds x="500" y="460" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_post" bpmnElement="task_postmortem"><dc:Bounds x="1060" y="210" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_end" bpmnElement="end_case"><dc:Bounds x="1212" y="232" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_start" bpmnElement="flow_start_triage"><di:waypoint x="188" y="250" /><di:waypoint x="240" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_triage_gw" bpmnElement="flow_triage_gw"><di:waypoint x="340" y="250" /><di:waypoint x="392" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_close" bpmnElement="flow_close"><di:waypoint x="442" y="250" /><di:waypoint x="1060" y="250" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_escalate" bpmnElement="flow_escalate"><di:waypoint x="417" y="225" /><di:waypoint x="417" y="80" /><di:waypoint x="500" y="80" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_enqueue_wait" bpmnElement="flow_enqueue_wait"><di:waypoint x="600" y="80" /><di:waypoint x="660" y="80" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_wait_gw" bpmnElement="flow_wait_gw"><di:waypoint x="760" y="80" /><di:waypoint x="820" y="80" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_approved" bpmnElement="flow_approved"><di:waypoint x="870" y="80" /><di:waypoint x="920" y="80" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_rejected" bpmnElement="flow_rejected"><di:waypoint x="845" y="105" /><di:waypoint x="845" y="170" /><di:waypoint x="1110" y="170" /><di:waypoint x="1110" y="210" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_remed_post" bpmnElement="flow_remediation_post"><di:waypoint x="1020" y="80" /><di:waypoint x="1110" y="80" /><di:waypoint x="1110" y="210" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_evidence" bpmnElement="flow_evidence"><di:waypoint x="417" y="275" /><di:waypoint x="417" y="380" /><di:waypoint x="500" y="380" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_review" bpmnElement="flow_review"><di:waypoint x="417" y="275" /><di:waypoint x="417" y="500" /><di:waypoint x="500" y="500" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_evidence_loop" bpmnElement="flow_evidence_retriage"><di:waypoint x="500" y="380" /><di:waypoint x="290" y="380" /><di:waypoint x="290" y="290" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_review_loop" bpmnElement="flow_review_retriage"><di:waypoint x="500" y="500" /><di:waypoint x="270" y="500" /><di:waypoint x="270" y="290" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_post_end" bpmnElement="flow_post_end"><di:waypoint x="1160" y="250" /><di:waypoint x="1212" y="250" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

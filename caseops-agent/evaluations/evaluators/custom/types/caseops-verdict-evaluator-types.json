@@ -1,0 +1,95 @@
+{
+  "evaluatorTypeId": "CaseopsVerdictEvaluator",
+  "evaluatorConfigSchema": {
+    "$defs": {
+      "CaseopsVerdictEvaluationCriteria": {
+        "description": "Expected verdict fields (subset of verify_verdict.VERDICT_FIELDS).",
+        "properties": {
+          "expected_severity": {
+            "title": "Expected Severity",
+            "type": "string"
+          },
+          "expected_branch": {
+            "title": "Expected Branch",
+            "type": "string"
+          },
+          "expected_approval": {
+            "title": "Expected Approval",
+            "type": "boolean"
+          },
+          "expected_confidence": {
+            "title": "Expected Confidence",
+            "type": "number"
+          }
+        },
+        "required": [
+          "expected_severity",
+          "expected_branch",
+          "expected_approval",
+          "expected_confidence"
+        ],
+        "title": "CaseopsVerdictEvaluationCriteria",
+        "type": "object"
+      }
+    },
+    "description": "Configuration for the caseops-verdict evaluator.",
+    "properties": {
+      "name": {
+        "default": "CaseopsVerdictEvaluator",
+        "title": "Name",
+        "type": "string"
+      },
+      "description": {
+        "default": "",
+        "description": "The description of the evaluator",
+        "title": "Description",
+        "type": "string"
+      },
+      "default_evaluation_criteria": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/CaseopsVerdictEvaluationCriteria"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "title": "CaseopsVerdictEvaluatorConfig",
+    "type": "object"
+  },
+  "evaluationCriteriaSchema": {
+    "description": "Expected verdict fields (subset of verify_verdict.VERDICT_FIELDS).",
+    "properties": {
+      "expected_severity": {
+        "title": "Expected Severity",
+        "type": "string"
+      },
+      "expected_branch": {
+        "title": "Expected Branch",
+        "type": "string"
+      },
+      "expected_approval": {
+        "title": "Expected Approval",
+        "type": "boolean"
+      },
+      "expected_confidence": {
+        "title": "Expected Confidence",
+        "type": "number"
+      }
+    },
+    "required": [
+      "expected_severity",
+      "expected_branch",
+      "expected_approval",
+      "expected_confidence"
+    ],
+    "title": "CaseopsVerdictEvaluationCriteria",
+    "type": "object"
+  },
+  "justificationSchema": {
+    "type": "string"
+  }
+}

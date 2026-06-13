@@ -1,0 +1,6 @@
+{
+  "ProjectType": "Function",
+  "Name": "aegis-caseops-remediation-stub",
+  "Description": "Aegis CaseOps mock remediation agent (post-approval stub) for UiPath AgentHack 2026",
+  "MainFile": null
+}

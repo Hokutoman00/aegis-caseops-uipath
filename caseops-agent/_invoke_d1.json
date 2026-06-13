@@ -1,0 +1,51 @@
+{
+  "case_id": "INC-2026-0002",
+  "source": "splunk-demo",
+  "title": "Single failed login from known VPN range",
+  "alert_time": "2026-06-11T02:10:00Z",
+  "asset": {
+    "hostname": "dev-sandbox-03",
+    "business_unit": "Engineering",
+    "criticality": "low",
+    "owner": "platform-eng"
+  },
+  "signals": [
+    {
+      "type": "auth",
+      "label": "Failed login burst (3 attempts)",
+      "severity": 1,
+      "confidence": 0.9
+    },
+    {
+      "type": "auth",
+      "label": "Successful login from corporate VPN range",
+      "severity": 1,
+      "confidence": 0.95
+    }
+  ],
+  "tool_results": [
+    {
+      "tool": "splunk_search",
+      "status": "ok",
+      "summary": "No correlated events in the last 24 hours."
+    },
+    {
+      "tool": "asset_inventory",
+      "status": "ok",
+      "summary": "Non-production sandbox, no sensitive data tags."
+    },
+    {
+      "tool": "identity_graph",
+      "status": "ok",
+      "summary": "Login matches the asset owner's usual pattern."
+    }
+  ],
+  "policy_context": {
+    "requires_human_approval_for": [
+      "account_disable",
+      "network_isolation",
+      "privilege_revocation"
+    ],
+    "sla_minutes": 240
+  }
+}

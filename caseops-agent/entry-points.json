@@ -1,0 +1,128 @@
+{
+    "$schema": "https://cloud.uipath.com/draft/2024-12/entry-point",
+    "$id": "entry-points.json",
+    "entryPoints": [
+        {
+            "filePath": "main",
+            "uniqueId": "6671f588-d3d1-43f5-9bc3-069f65cf34c3",
+            "type": "function",
+            "input": {
+                "type": "object",
+                "properties": {
+                    "case_id": {
+                        "type": "string"
+                    },
+                    "asset": {
+                        "type": "object"
+                    },
+                    "signals": {
+                        "type": "object"
+                    },
+                    "tool_results": {
+                        "type": "object"
+                    },
+                    "policy_context": {
+                        "type": "object"
+                    },
+                    "source": {
+                        "type": "object"
+                    },
+                    "title": {
+                        "type": "object"
+                    },
+                    "alert_time": {
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "case_id"
+                ]
+            },
+            "output": {
+                "type": "object",
+                "properties": {
+                    "case_id": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string"
+                    },
+                    "confidence": {
+                        "type": "number"
+                    },
+                    "case_stage": {
+                        "type": "string"
+                    },
+                    "recommended_action": {
+                        "type": "object"
+                    },
+                    "human_approval_required": {
+                        "type": "boolean"
+                    },
+                    "maestro_branch": {
+                        "type": "string"
+                    },
+                    "evidence": {
+                        "type": "object"
+                    },
+                    "gaps": {
+                        "type": "object"
+                    },
+                    "rationale": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "case_id",
+                    "severity",
+                    "confidence",
+                    "case_stage",
+                    "recommended_action",
+                    "human_approval_required",
+                    "maestro_branch",
+                    "evidence",
+                    "gaps",
+                    "rationale"
+                ]
+            },
+            "graph": {
+                "nodes": [
+                    {
+                        "id": "main.py:123",
+                        "name": "main",
+                        "type": "function",
+                        "metadata": {
+                            "file": "main.py"
+                        }
+                    },
+                    {
+                        "id": "main.py:77",
+                        "name": "_risk_points",
+                        "type": "function",
+                        "metadata": {
+                            "file": "main.py"
+                        }
+                    },
+                    {
+                        "id": "main.py:85",
+                        "name": "_corroborated_confidence",
+                        "type": "function",
+                        "metadata": {
+                            "file": "main.py"
+                        }
+                    }
+                ],
+                "edges": [
+                    {
+                        "source": "main.py:123",
+                        "target": "main.py:77"
+                    },
+                    {
+                        "source": "main.py:123",
+                        "target": "main.py:85"
+                    }
+                ]
+            }
+        }
+    ]
+}

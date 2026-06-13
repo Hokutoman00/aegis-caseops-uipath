@@ -1,0 +1,9 @@
+[project]
+name = "aegis-caseops-remediation-stub"
+version = "0.1.0"
+description = "Aegis CaseOps mock remediation agent (post-approval stub) for UiPath AgentHack 2026"
+authors = [{ name = "Hokuto Torigoe" }]
+requires-python = ">=3.11"
+dependencies = [
+    "uipath>=2.10",
+]

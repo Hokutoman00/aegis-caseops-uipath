@@ -1,0 +1,57 @@
+{
+  "case_id": "INC-2026-0001",
+  "source": "splunk-demo",
+  "title": "Suspicious privilege escalation followed by outbound transfer",
+  "alert_time": "2026-06-03T08:30:00Z",
+  "asset": {
+    "hostname": "fin-app-07",
+    "business_unit": "Finance",
+    "criticality": "high",
+    "owner": "finance-ops"
+  },
+  "signals": [
+    {
+      "type": "auth",
+      "label": "Impossible travel login",
+      "severity": 3,
+      "confidence": 0.74
+    },
+    {
+      "type": "identity",
+      "label": "New admin role assigned",
+      "severity": 5,
+      "confidence": 0.86
+    },
+    {
+      "type": "network",
+      "label": "Outbound transfer to unrecognized ASN",
+      "severity": 4,
+      "confidence": 0.68
+    }
+  ],
+  "tool_results": [
+    {
+      "tool": "splunk_search",
+      "status": "ok",
+      "summary": "Three correlated events found within 14 minutes."
+    },
+    {
+      "tool": "asset_inventory",
+      "status": "failed",
+      "summary": "Inventory API timed out."
+    },
+    {
+      "tool": "identity_graph",
+      "status": "ok",
+      "summary": "Role assignment originated from a non-standard admin workstation."
+    }
+  ],
+  "policy_context": {
+    "requires_human_approval_for": [
+      "account_disable",
+      "network_isolation",
+      "privilege_revocation"
+    ],
+    "sla_minutes": 30
+  }
+}

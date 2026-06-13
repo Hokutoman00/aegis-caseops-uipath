@@ -1,0 +1,215 @@
+{
+  "id": "caseops-demo",
+  "name": "CaseOps demo verdict regression",
+  "version": "1.0",
+  "evaluatorRefs": [
+    "CaseopsVerdictEvaluator"
+  ],
+  "evaluatorConfigs": [
+    {
+      "ref": "CaseopsVerdictEvaluator",
+      "weight": 1.0
+    }
+  ],
+  "evaluations": [
+    {
+      "id": "d1",
+      "name": "D1: Single failed login from known VPN range",
+      "inputs": {
+        "case_id": "INC-2026-0002",
+        "source": "splunk-demo",
+        "title": "Single failed login from known VPN range",
+        "alert_time": "2026-06-11T02:10:00Z",
+        "asset": {
+          "hostname": "dev-sandbox-03",
+          "business_unit": "Engineering",
+          "criticality": "low",
+          "owner": "platform-eng"
+        },
+        "signals": [
+          {
+            "type": "auth",
+            "label": "Failed login burst (3 attempts)",
+            "severity": 1,
+            "confidence": 0.9
+          },
+          {
+            "type": "auth",
+            "label": "Successful login from corporate VPN range",
+            "severity": 1,
+            "confidence": 0.95
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "splunk_search",
+            "status": "ok",
+            "summary": "No correlated events in the last 24 hours."
+          },
+          {
+            "tool": "asset_inventory",
+            "status": "ok",
+            "summary": "Non-production sandbox, no sensitive data tags."
+          },
+          {
+            "tool": "identity_graph",
+            "status": "ok",
+            "summary": "Login matches the asset owner's usual pattern."
+          }
+        ],
+        "policy_context": {
+          "requires_human_approval_for": [
+            "account_disable",
+            "network_isolation",
+            "privilege_revocation"
+          ],
+          "sla_minutes": 240
+        }
+      },
+      "expectedAgentBehavior": "Deterministic triage emits the four verdict fields matching the demo contract.",
+      "evaluationCriterias": {
+        "CaseopsVerdictEvaluator": {
+          "expected_severity": "low",
+          "expected_branch": "low_risk_close",
+          "expected_approval": false,
+          "expected_confidence": 0.7
+        }
+      }
+    },
+    {
+      "id": "d2",
+      "name": "D2: Suspicious privilege escalation followed by outbound transfer",
+      "inputs": {
+        "case_id": "INC-2026-0001",
+        "source": "splunk-demo",
+        "title": "Suspicious privilege escalation followed by outbound transfer",
+        "alert_time": "2026-06-03T08:30:00Z",
+        "asset": {
+          "hostname": "fin-app-07",
+          "business_unit": "Finance",
+          "criticality": "high",
+          "owner": "finance-ops"
+        },
+        "signals": [
+          {
+            "type": "auth",
+            "label": "Impossible travel login",
+            "severity": 3,
+            "confidence": 0.74
+          },
+          {
+            "type": "identity",
+            "label": "New admin role assigned",
+            "severity": 5,
+            "confidence": 0.86
+          },
+          {
+            "type": "network",
+            "label": "Outbound transfer to unrecognized ASN",
+            "severity": 4,
+            "confidence": 0.68
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "splunk_search",
+            "status": "ok",
+            "summary": "Three correlated events found within 14 minutes."
+          },
+          {
+            "tool": "asset_inventory",
+            "status": "failed",
+            "summary": "Inventory API timed out."
+          },
+          {
+            "tool": "identity_graph",
+            "status": "ok",
+            "summary": "Role assignment originated from a non-standard admin workstation."
+          }
+        ],
+        "policy_context": {
+          "requires_human_approval_for": [
+            "account_disable",
+            "network_isolation",
+            "privilege_revocation"
+          ],
+          "sla_minutes": 30
+        }
+      },
+      "expectedAgentBehavior": "Deterministic triage emits the four verdict fields matching the demo contract.",
+      "evaluationCriterias": {
+        "CaseopsVerdictEvaluator": {
+          "expected_severity": "critical",
+          "expected_branch": "escalate_for_containment",
+          "expected_approval": true,
+          "expected_confidence": 0.76
+        }
+      }
+    },
+    {
+      "id": "d3",
+      "name": "D3: Possible lateral movement with degraded tooling",
+      "inputs": {
+        "case_id": "INC-2026-0003",
+        "source": "splunk-demo",
+        "title": "Possible lateral movement with degraded tooling",
+        "alert_time": "2026-06-11T05:42:00Z",
+        "asset": {
+          "hostname": "hr-db-02",
+          "business_unit": "HR",
+          "criticality": "high",
+          "owner": "hr-it"
+        },
+        "signals": [
+          {
+            "type": "network",
+            "label": "SMB connections to 4 internal hosts in 5 minutes",
+            "severity": 4,
+            "confidence": 0.55
+          },
+          {
+            "type": "process",
+            "label": "PsExec-like service installation",
+            "severity": 4,
+            "confidence": 0.6
+          }
+        ],
+        "tool_results": [
+          {
+            "tool": "splunk_search",
+            "status": "ok",
+            "summary": "Two correlated events found within 5 minutes."
+          },
+          {
+            "tool": "asset_inventory",
+            "status": "failed",
+            "summary": "Inventory API timed out."
+          },
+          {
+            "tool": "identity_graph",
+            "status": "failed",
+            "summary": "Identity graph service returned 503."
+          }
+        ],
+        "policy_context": {
+          "requires_human_approval_for": [
+            "account_disable",
+            "network_isolation",
+            "privilege_revocation"
+          ],
+          "sla_minutes": 30
+        }
+      },
+      "expectedAgentBehavior": "Deterministic triage emits the four verdict fields matching the demo contract.",
+      "evaluationCriterias": {
+        "CaseopsVerdictEvaluator": {
+          "expected_severity": "high",
+          "expected_branch": "confidence_gap_review",
+          "expected_approval": true,
+          "expected_confidence": 0.57
+        }
+      }
+    }
+  ],
+  "modelSettings": []
+}

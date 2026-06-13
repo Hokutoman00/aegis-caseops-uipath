@@ -1,0 +1,6 @@
+{
+  "ProjectType": "Function",
+  "Name": "aegis-caseops-triage",
+  "Description": "Aegis CaseOps deterministic triage agent for UiPath Maestro Case (UiPath AgentHack 2026)",
+  "MainFile": null
+}

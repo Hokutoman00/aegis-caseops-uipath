@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "id": "CaseopsVerdictEvaluator",
+  "evaluatorTypeId": "file://types/caseops-verdict-evaluator-types.json",
+  "evaluatorSchema": "file://caseops_verdict.py:CaseopsVerdictEvaluator",
+  "description": "Score = fraction of verdict fields that match the expected values.",
+  "evaluatorConfig": {
+    "name": "CaseopsVerdictEvaluator",
+    "description": "",
+    "defaultEvaluationCriteria": null
+  }
+}

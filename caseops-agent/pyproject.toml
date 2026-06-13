@@ -1,0 +1,9 @@
+[project]
+name = "aegis-caseops-triage"
+version = "0.1.0"
+description = "Aegis CaseOps deterministic triage agent for UiPath Maestro Case (UiPath AgentHack 2026)"
+authors = [{ name = "Hokuto Torigoe" }]
+requires-python = ">=3.11"
+dependencies = [
+    "uipath>=2.10",
+]

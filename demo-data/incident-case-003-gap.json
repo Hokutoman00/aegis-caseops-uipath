@@ -1,0 +1,51 @@
+{
+  "case_id": "INC-2026-0003",
+  "source": "splunk-demo",
+  "title": "Possible lateral movement with degraded tooling",
+  "alert_time": "2026-06-11T05:42:00Z",
+  "asset": {
+    "hostname": "hr-db-02",
+    "business_unit": "HR",
+    "criticality": "high",
+    "owner": "hr-it"
+  },
+  "signals": [
+    {
+      "type": "network",
+      "label": "SMB connections to 4 internal hosts in 5 minutes",
+      "severity": 4,
+      "confidence": 0.55
+    },
+    {
+      "type": "process",
+      "label": "PsExec-like service installation",
+      "severity": 4,
+      "confidence": 0.6
+    }
+  ],
+  "tool_results": [
+    {
+      "tool": "splunk_search",
+      "status": "ok",
+      "summary": "Two correlated events found within 5 minutes."
+    },
+    {
+      "tool": "asset_inventory",
+      "status": "failed",
+      "summary": "Inventory API timed out."
+    },
+    {
+      "tool": "identity_graph",
+      "status": "failed",
+      "summary": "Identity graph service returned 503."
+    }
+  ],
+  "policy_context": {
+    "requires_human_approval_for": [
+      "account_disable",
+      "network_isolation",
+      "privilege_revocation"
+    ],
+    "sla_minutes": 30
+  }
+}

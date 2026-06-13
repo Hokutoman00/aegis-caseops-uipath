@@ -1,0 +1,21 @@
+# Secrets — never commit
+.env
+*.env
+.uipath/
+**/.uipath/
+*.auth.json
+*.telemetry.json
+.credentials/
+
+# Python
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
